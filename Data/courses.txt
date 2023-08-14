@@ -1,0 +1,5 @@
+75fe0fdf-f5e9-4fe6-9e1c-219a8ca0cfd1,QA/QE,QA/QE,5,20000
+b73ead5f-6ef8-4e6e-83ff-ecdbd4da7f5d,C# Full Stack Development,C# Full Stack Development,5,50000
+c6cc04ea-f044-4168-9461-9a0c348be8f5,JavaScript Full-Stack Development,JavaScript Full-Stack Development,5,40000
+bc57348c-7954-4992-8e7f-f3c796a38368,one,one,5,5000
+46760006-3c47-458d-bcde-25bd9bf12d10,WordPress Full Stack Development,wp,5,30000
