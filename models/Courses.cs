@@ -6,8 +6,7 @@ namespace models
 {
     public class Courses
     {
-        private string v;
-
+        private JituAnalytics jituAnalytics = JituAnalytics.GetInstance();
         public Courses(string id, string name, string title, int rating, int amount)
         {
             this.Id = id;
@@ -31,18 +30,6 @@ namespace models
 
         public int Amount { get; set; }
 
-        // create file if not exists
-        // public void CreateFile()
-        // {
-        //     string currentDir = Directory.GetCurrentDirectory();
-        //     string filepath = Path.Combine(currentDir,  "Data", "courses.txt");
-        //     if (!File.Exists(filepath))
-        //     {
-        //         File.Create(filepath);
-        //     }
-        // }
-
-        // print an object
         public void Print()
         {
             Console.WriteLine(this);
@@ -63,10 +50,8 @@ namespace models
                 File.Create(filepath);
             }
 
-            // Create a string that contains the data
             string data = String.Join(",", Id, Name, Title, Rating, Amount);
 
-            // Read the file and check if it contains the same data
             bool duplicate = false;
             string[] lines = File.ReadAllLines(filepath);
             foreach (string line in lines)
@@ -78,7 +63,6 @@ namespace models
                 }
             }
 
-            // Write the data to the file only if it is not a duplicate
             if (!duplicate)
             {
                 using (FileStream fs = new FileStream(filepath, FileMode.Append, FileAccess.Write))

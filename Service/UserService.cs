@@ -10,6 +10,7 @@ namespace UserService.Models
     {
         private static JituService jituService = new JituService();
         private static User LogInUser;
+        private JituAnalytics jituAnalytics = JituAnalytics.GetInstance();
         public void checkeUserExists(string username)
         {
             string currentDir = Directory.GetCurrentDirectory();
@@ -49,6 +50,11 @@ namespace UserService.Models
             string userId = Guid.NewGuid().ToString();
             User user = new(userId, username, email, password);
             user.Save();
+            if (jituAnalytics != null)
+            {
+                jituAnalytics.Users++;
+                jituAnalytics.Save();
+            }
             // if success regretter take the user to log in
             Console.WriteLine("user Registered successful");
             Console.WriteLine("Please Login");
@@ -60,38 +66,52 @@ namespace UserService.Models
             LoginUser(username1, password1);    
         
         }
-        public void LoginUser(string? username, string? password)
+    public void LoginUser(string? username, string? password)
+    {
+        string currentDir = Directory.GetCurrentDirectory();
+        string filepath = Path.Combine(currentDir, "Data", "user.txt");
+
+        bool loginSuccess = false;
+        string[] lines = File.ReadAllLines(filepath);
+
+        foreach (string line in lines)
         {
-            string currentDir = Directory.GetCurrentDirectory();
-            string filepath = Path.Combine(currentDir, "Data", "user.txt");
-
-            bool loginSuccess = false;
-            string[] lines = File.ReadAllLines(filepath);  // Read all lines once
-
-            foreach (string line in lines)
+            string[] data = line.Split(';');
+            if (data.Length > 0)
             {
-                string[] data = line.Split(',');
+                string[] userData = data[0].Split(',');
 
-                if (data.Length >= 6 && data[1] == username && data[3] == password)
+                if (userData.Length >= 5 && userData[1] == username && userData[3] == password)
                 {
                     List<Courses> userCourses = new List<Courses>();
-                    for (int i = 0; i < data[5].Split(',').Length; i++)
+
+                    if (data.Length > 1 && !string.IsNullOrEmpty(data[1]))
                     {
-                        userCourses.Add(Courses.GetById(data[5].Split(',')[i]));
+                        string[] courseIds = data[1].Split(',');
+                        foreach (string courseId in courseIds)
+                        {
+                            userCourses.Add(Courses.GetById(courseId));
+                        }
                     }
-                    LogInUser = new User(data[0], data[1], data[2], data[3], int.Parse(data[4]), userCourses);
-                    LogInUser.PrintCourses();
+                    LogInUser = new User(userData[0], userData[1], userData[2], userData[3], int.Parse(userData[4]), userCourses);
+                    Console.Clear();
                     Console.WriteLine("Login Successful");
                     showUserMenu();
                     loginSuccess = true;
                     break;
                 }
             }
-            if (!loginSuccess)
-            {
-                Console.WriteLine("Login Failed");
-            }
         }
+
+        if (!loginSuccess)
+        {
+            Console.Clear();
+            Console.WriteLine("Login Failed");
+            jituService.ShowServices();
+        }
+    }
+
+
 
 
         public void showUserMenu()
@@ -120,8 +140,16 @@ namespace UserService.Models
                         logout();
                         break;
                     default:
+                        Console.Clear();
+                        Console.WriteLine("Invalid Option");
+                        showUserMenu();
                         break;
                 }
+            }
+            else{
+                Console.Clear();
+                Console.WriteLine("Invalid Option");
+                showUserMenu();
             }
 
         }
@@ -167,16 +195,22 @@ namespace UserService.Models
         {
             // Check user balance
             Courses selectedCourse = allCourses[int.Parse(courseChoice) - 1];
-            // check user balance
             if (LogInUser.Credit >= selectedCourse.Amount)
             {
                 // purchase course
                 LogInUser.Credit -= selectedCourse.Amount;
+                Console.WriteLine(selectedCourse);
                 LogInUser.Courses.Add(selectedCourse);
                 LogInUser.Save();
+                if (jituAnalytics != null)
+                {
+                    jituAnalytics.Purchased++;
+                    jituAnalytics.Save();
+                }
+                LogInUser.PrintFullUser();
                 Console.WriteLine("Course Purchased");
                 Console.WriteLine("Your balance is: " + LogInUser.Credit);
-                purchaseCourse();
+                // purchaseCourse();
             } else{
                 // deposit
                 showDepositMenu();
@@ -205,7 +239,6 @@ namespace UserService.Models
                 switch(depositChoice)
                 {
                     case "1":
-                        // deposit
                         deposit();
 
                         break;
@@ -236,9 +269,7 @@ namespace UserService.Models
         public void logout()
         {
             Console.WriteLine("Logout Successful");
-            // reset the current user
             LogInUser = null;
-            // exit the console application
             Environment.Exit(0);
 
         }
@@ -252,32 +283,38 @@ namespace UserService.Models
                 int depositAmountInt = int.Parse(depositAmount);
                 LogInUser.Credit += depositAmountInt;
                 LogInUser.Save();
+                LogInUser.PrintFullUser();
                 Console.WriteLine("Your balance is: " + LogInUser.Credit);
             }
             else{
                 showDepositMenu();
             }
         }
-        public void purchaseCourse()
-        {
-            // deduct user balance from course amount
-            // add course to user purchased courses
-            // save user data
-            // show user purchased courses
-            LogInUser.Credit -= LogInUser.Courses[0].Amount;
-            LogInUser.Courses.Add(LogInUser.Courses[0]);
-        }
+        // public void purchaseCourse()
+        // {
+        //     // deduct user balance from course amount
+        //     // add course to user purchased courses
+        //     // save user data
+        //     // show user purchased courses
+        //     LogInUser.Credit -= LogInUser.Courses[0].Amount;
+        //     LogInUser.Courses.Add(LogInUser.Courses[0]);
+
+        // }
 
         public void showUsersPurchasedCourses()
         {
-            Console.WriteLine("Purchased Courses:");
-            Console.WriteLine("Name: " + LogInUser.Courses.Count);
-            foreach (Courses course in LogInUser.Courses)
+            Console.Clear();
+            LogInUser.PrintFullUser();
+            Console.WriteLine("1. Go back to the previous menu");
+            string? choice = Console.ReadLine();
+            int choiceValid = jituService.ValidateOption(choice, 1, 1);
+            if (choiceValid == 1)
             {
-                Console.WriteLine(course);
-                course.Print();
-                LogInUser.print();
+                showUserMenu();
+            }else{
+             showUsersPurchasedCourses();
             }
+
         }
 
     }

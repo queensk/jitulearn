@@ -6,6 +6,8 @@ namespace AdminServices
     public class AdminService{
 
         private static JituService jituService = new JituService();
+        private JituAnalytics jituAnalytics = JituAnalytics.GetInstance();
+
 
         public void loginAdmin(string? username, string? password){
             string currentDir = Directory.GetCurrentDirectory();
@@ -114,6 +116,11 @@ namespace AdminServices
                         string? courseId = Console.ReadLine();
                         string? courseId1 = jituService.ValidateUserInput(courseId, "Enter valid course id");
                         Courses.Delete(courseId1);
+                        if (jituAnalytics != null)
+                        {
+                            jituAnalytics.Courses--;
+                            jituAnalytics.Save();
+                        }
                         Console.WriteLine("Course deleted successfully");
                         Console.WriteLine("1. show other options");
                         string otherOption1 = Console.ReadLine();
@@ -163,6 +170,18 @@ namespace AdminServices
                         break;
                     case "5":
                         // jituService.viewAnalytics();
+                        jituAnalytics.print();
+                        Console.WriteLine("1. show other options");
+                        string otherOption3 = Console.ReadLine();
+                        int otherOptionInt3 = jituService.ValidateOption(otherOption3, 1, 1);
+                        if (otherOptionInt3 == 1)
+                        {
+                            showAdminOptions();
+                        }
+                        else{
+                            Console.WriteLine("invalid option");
+                            showAdminOptions();
+                        }
                         break;
                     case "6":
                         Console.WriteLine("Exiting");
@@ -201,6 +220,11 @@ namespace AdminServices
             Courses courses = new Courses(courseId, courseName, title, ratting, courseFee);
             courses.Save();
             courses.Print();
+            if (jituAnalytics != null)
+            {
+                jituAnalytics.Courses++;
+                jituAnalytics.Save();
+            }
             Console.WriteLine("Course added successfully");
             // display the course details
         }

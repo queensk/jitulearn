@@ -8,6 +8,7 @@ namespace models
         private string password;
         private int credit;
         private List<Courses> courses;
+        private JituAnalytics jituAnalytics = JituAnalytics.GetInstance();
 
         // user constructor
         public User(string id, string name, string email, string password, int credit=0, List<Courses> courses=null)
@@ -17,7 +18,7 @@ namespace models
             this.email = email;
             this.password = password;
             this.credit = credit;
-            this.courses = new List<Courses>();
+            this.courses = courses ?? new List<Courses>();
         }
 
         // getters and setters
@@ -47,8 +48,8 @@ namespace models
         string currentDir = Directory.GetCurrentDirectory();
         string filepath = Path.Combine(currentDir, "Data", "user.txt");
 
-        string courseIds = ";" + string.Join(",", Courses.Select(course => course.Id));
-        string data = $"{Id},{Name},{Email},{Password},{Credit},{courseIds}";
+        string courseIds = Courses.Count > 0 ? ";" + string.Join(",", Courses.Select(course => course.Id)) : string.Empty;
+        string data = $"{Id},{Name},{Email},{Password},{Credit}{courseIds}";
 
         bool updated = false;
 
@@ -88,7 +89,7 @@ namespace models
             Console.WriteLine($"Courses for {Name}:");
             foreach (Courses course in Courses)
             {
-                course.Print();
+                Console.WriteLine($"Course: {course.Name}, Id: {course.Id}, Credit: {course.Rating}");
             }
         }
         else
@@ -96,6 +97,28 @@ namespace models
             Console.WriteLine($"{Name} has no courses.");
         }
     }
+
+    public void PrintFullUser()
+    {
+        Console.WriteLine($"User Details for {Name} (ID: {Id}):");
+        Console.WriteLine($"Email: {Email}");
+        Console.WriteLine($"Credit: {Credit}");
+
+        if (Courses.Count > 0)
+        {
+            Console.WriteLine("Courses:");
+            foreach (Courses course in Courses)
+            {
+                Console.WriteLine($"- Course: {course.Name}, Ratting: {course.Rating} out of 5, Price: {course.Amount} Ksh");
+            }
+        }
+        else
+        {
+            Console.WriteLine("No courses purchased.");
+        }
+    }
+
+
     }
 }
 

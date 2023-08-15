@@ -5,6 +5,7 @@ namespace models
         private string name;
         private string password;
         private string email;
+        private JituAnalytics jituAnalytics = JituAnalytics.GetInstance();
 
         // admin constructor
 
